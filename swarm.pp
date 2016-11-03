@@ -6,7 +6,7 @@ $host_ip        = $::ipaddress
 $host_interface = "eth1"
 notify {"Swarm adverising on interface: ${host_interface}, ip:${host_ip}":}
 
-if $host_ips == "" {
+if $::host_ips == "" {
   fail("Unable to determine consul host ips using environment variable \$host_ips: ${::host_ips}"")
 } else {
   $consul_server_ips = split($::host_ips, ',')
