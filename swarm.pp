@@ -5,7 +5,7 @@ $consul_ver     = '0.6.3'
 if $host_ip == undef { $host_ip = $::ipaddress }
 notify {"Swarm adverising on ip:${host_ip}":}
 
-if $::host_ips == undef {
+if size($::host_ips) < 1 {
   fail("Unable to get the list of consul ip's - Variable \'\$host_ips\' is undef. This string variable of comma-separated ip's is used by consul to join nodes using the \'start_join\' parameter).")
 } else {
   $consul_member_ips = split($::host_ips, ',')
