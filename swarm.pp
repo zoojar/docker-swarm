@@ -2,9 +2,8 @@
 # Consul manager server ips are set using environment variable $host_ips; a comma-separated list of consul hosts 
 
 $consul_ver     = '0.6.3'
-$host_ip        = $::ipaddress
-$host_interface = "eth1"
-notify {"Swarm adverising on interface: ${host_interface}, ip:${host_ip}":}
+if $host_ip == undef { $host_ip = $::ipaddress }
+notify {"Swarm adverising on ip:${host_ip}":}
 
 if $::host_ips == "" {
   fail("Unable to determine consul host ips using environment variable \$host_ips: ${::host_ips}"")
