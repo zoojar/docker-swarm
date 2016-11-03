@@ -1,5 +1,5 @@
 
-$consul_version = '0.6.3'
+$consul_ver = '0.6.3'
 $host_ip        = $::ipaddress
 $host_interface = "eth1"
 notify {"Swarm adverising on interface: ${host_interface}, ip:${host_ip}":}
@@ -11,7 +11,7 @@ package { 'unzip': ensure => installed }
 if "${host_ip}" == "${consul_server_ip}" {
   class { '::consul':
     require     => Package['unzip'],
-    version     => $consul_version,
+    version     => $consul_ver,
     config_hash => {
       'server'           => true,
       'datacenter'       => 'dc1',
@@ -27,7 +27,7 @@ if "${host_ip}" == "${consul_server_ip}" {
 } else { 
   class { '::consul':
     require     => Package['unzip'],
-    version     => $consul_version,
+    version     => $consul_ver,
     config_hash => {
       'bootstrap'        => false,
       'server'           => false,
