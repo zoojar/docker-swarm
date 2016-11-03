@@ -8,10 +8,10 @@ notify {"Swarm adverising on ip:${host_ip}":}
 if $::host_ips == undef {
   fail("Unable to get the list of consul ip's - Variable \'\$host_ips\' is undef. This string variable of comma-separated ip's is used by consul to join nodes using the \'start_join\' parameter).")
 } else {
-  $consul_server_ips = split($::host_ips, ',')
+  $consul_member_ips = split($::host_ips, ',')
 }
 
-notify {"Consul Server IP's: ${consul_server_ips}.":}
+notify {"Members of the Consul cluster: ${consul_member_ips}.":}
 
 package { 'unzip': ensure => installed }
 
@@ -45,7 +45,7 @@ if size($consul_server_ips) <= 1  {
       'client_addr'      => '0.0.0.0',
       'bind_addr'        => "${host_ip}",
       'node_name'        => "$::hostname",
-      'start_join'       => $consul_server_ips,
+      'start_join'       => $consul_member_ips,
     }
   }
 }
