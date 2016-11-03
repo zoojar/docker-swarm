@@ -15,7 +15,7 @@ notify {"Members of the Consul cluster: ${consul_member_ips}.":}
 
 package { 'unzip': ensure => installed }
 
-if size($consul_server_ips) <= 1  {  
+if size($consul_member_ips) <= 1  {  
   #(If i am the only node here then declare myself as a server)
   class { '::consul':
     require     => Package['unzip'],
