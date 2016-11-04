@@ -74,7 +74,7 @@ if "${::consul_role}" == "server"  {
   ::docker::run { 'swarm-manager':
     image   => 'swarm',
     ports   => '4000:4000',
-    command => "manage -H :4000 --replication --advertise ${host_ip}:4000 consul://${consul_server_ips[0]}:8500/  swarm_nodes",
+    command => "manage -H :4000 --replication --advertise ${host_ip}:4000 consul://${consul_server_ips[0]}:8500/swarm_nodes",
     require => [
       Docker::Run['swarm'],
       Class['::consul'],
