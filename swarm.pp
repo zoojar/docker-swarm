@@ -5,18 +5,17 @@ $consul_ver     = '0.6.3'
 if $host_ip == undef { $host_ip = $::ipaddress }
 notify {"Swarm adverising on ip:${host_ip}":}
 
-if size($::host_ips) < 1 {
+if size($::consul_servers) < 1 {
   fail("Unable to get the list of consul ip's - Variable \'\$host_ips\' is undef. This string variable of comma-separated ip's is used by consul to join nodes using the \'start_join\' parameter).")
 } else {
-  $consul_member_ips = split($::host_ips, ',')
+  $consul_member_ips = split($::consul_servers, ',')
 }
 
-notify {"Members of the Consul cluster: ${consul_member_ips}.":}
+notify {"Members of the Consul cluster: ${consul_server_ips}.":}
 
 package { 'unzip': ensure => installed }
 
-if size($consul_member_ips) <= 1  {  
-  #(If i am the only node here then declare myself as a server)
+if "${::consul_role}" == "server"  {  
   class { '::consul':
     require     => Package['unzip'],
     version     => $consul_ver,
@@ -45,7 +44,7 @@ if size($consul_member_ips) <= 1  {
       'client_addr'      => '0.0.0.0',
       'bind_addr'        => "${host_ip}",
       'node_name'        => "$::hostname",
-      'start_join'       => $consul_member_ips,
+      'start_join'       => $consul_server_ips,
     }
   }
 }
@@ -69,6 +68,7 @@ class { '::docker':
   require => Class['::consul'],
   image   => 'swarm',
   command => "join --addr=${host_ip}:2375 consul://${host_ip}:8500/swarm_nodes",
+  noop    => true,
 }
 
 ::docker::run { 'swarm-manager':
@@ -79,4 +79,5 @@ class { '::docker':
     Docker::Run['swarm'],
     Class['::consul'],
   ],
+  noop    => true,
 }
