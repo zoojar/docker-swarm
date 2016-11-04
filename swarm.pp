@@ -11,11 +11,12 @@ if size($::consul_servers) < 1 {
   $consul_server_ips = split($::consul_servers, ',')
 }
 
-notify {"Members of the Consul cluster: ${consul_server_ips}.":}
+notify {"Consul servers are: ${consul_server_ips}.":}
 
 package { 'unzip': ensure => installed }
 
 if "${::consul_role}" == "server"  {  
+  notify {"Configuring this host as a consul server":}
   class { '::consul':
     require     => Package['unzip'],
     version     => $consul_ver,
@@ -31,7 +32,8 @@ if "${::consul_role}" == "server"  {
       'bootstrap_expect' => '1',
     }
   }
-} else { 
+} else {
+  notify {"Configuring this host as a consul node with swarm":}
   class { '::consul':
     require     => Package['unzip'],
     version     => $consul_ver,
@@ -44,40 +46,38 @@ if "${::consul_role}" == "server"  {
       'client_addr'      => '0.0.0.0',
       'bind_addr'        => "${host_ip}",
       'node_name'        => "$::hostname",
-      'start_join'       => $consul_server_ips,
+      'start_join'       => [ "${consul_server_ips[0]}" ],
     }
   }
-}
 
-consul::service { 'docker-service':
-  checks  => [
-    {
-      script   => 'service docker status',
-      interval => '10s',
-      tags     => ['docker-service']
-    }
-  ],
-  address => "${host_ip}",
-}
-
-class { '::docker':
-  tcp_bind => 'tcp://0.0.0.0:2375',
-}
-
-::docker::run { 'swarm':
-  require => Class['::consul'],
-  image   => 'swarm',
-  command => "join --addr=${host_ip}:2375 consul://${host_ip}:8500/swarm_nodes",
-  noop    => true,
-}
-
-::docker::run { 'swarm-manager':
-  image   => 'swarm',
-  ports   => '3000:2375',
-  command => "manage --replication --advertise ${host_ip}:3000 consul://${host_ip}:8500/swarm_nodes",
-  require => [
-    Docker::Run['swarm'],
-    Class['::consul'],
-  ],
-  noop    => true,
+  consul::service { 'docker-service':
+    checks  => [
+      {
+        script   => 'service docker status',
+        interval => '10s',
+        tags     => ['docker-service']
+      }
+    ],
+    address => "${host_ip}",
+  }
+  
+  class { '::docker':
+    tcp_bind => 'tcp://0.0.0.0:2375',
+  }
+  
+  ::docker::run { 'swarm':
+    require => Class['::consul'],
+    image   => 'swarm',
+    command => "join --addr=${host_ip}:2375 consul://${consul_server_ips[0]}:8500/swarm_nodes",
+  }
+  
+  ::docker::run { 'swarm-manager':
+    image   => 'swarm',
+    ports   => '4000:4000',
+    command => "manage -H :4000 --replication --advertise ${host_ip}:4000 consul://${consul_server_ips[0]}:8500/  swarm_nodes",
+    require => [
+      Docker::Run['swarm'],
+      Class['::consul'],
+    ],
+  }
 }
