@@ -6,9 +6,9 @@ if $host_ip == undef { $host_ip = $::ipaddress }
 notify {"Swarm adverising on ip:${host_ip}":}
 
 if size($::consul_servers) < 1 {
-  fail("Unable to get the list of consul ip's - Variable \'\$host_ips\' is undef. This string variable of comma-separated ip's is used by consul to join nodes using the \'start_join\' parameter).")
+  notify { "Unable to get the list of consul ip's - Variable \'\$host_ips\' is undef. This string variable of comma-separated ip's is used by consul to join nodes using the \'start_join\' parameter).": } 
 } else {
-  $consul_member_ips = split($::consul_servers, ',')
+  $consul_server_ips = split($::consul_servers, ',')
 }
 
 notify {"Members of the Consul cluster: ${consul_server_ips}.":}
